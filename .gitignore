@@ -1,0 +1,10 @@
+*.sublime-*
+.clangd
+compile_flags.txt
+*.log
+*.jou
+*.str
+build/*
+*.d
+*.o
+*.gch
