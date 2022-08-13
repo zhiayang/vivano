@@ -430,12 +430,14 @@ namespace zprocpipe
 			struct pollfd pfds[2] {};
 			pfds[0] = {
 				.fd = m_stdout_pipe,
-				.events = POLLIN
+				.events = POLLIN,
+				.revents = 0
 			};
 
 			pfds[1] = {
 				.fd = m_stderr_pipe,
-				.events = POLLIN
+				.events = POLLIN,
+				.revents = 0
 			};
 
 			int k = poll(&pfds[0], 2, timeout);

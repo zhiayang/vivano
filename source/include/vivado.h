@@ -14,6 +14,7 @@
 #include <unordered_set>
 
 #include <zpr.h>
+#include <zst.h>
 #include <zprocpipe.h>
 
 #include "msgconfig.h"
@@ -59,8 +60,12 @@ namespace vvn
 
 	struct Vivado
 	{
-		Vivado(const MsgConfig& msg_config, std::optional<stdfs::path> journal_file = std::nullopt);
 		~Vivado();
+		Vivado(const MsgConfig& msg_config);
+		Vivado(const MsgConfig& msg_config, stdfs::path working_dir);
+
+		Vivado(Vivado&&) = default;
+		Vivado& operator= (Vivado&&) = default;
 
 		template <typename... Args>
 		CommandOutput runCommand(const char* fmt, Args&&... args)
@@ -113,5 +118,5 @@ namespace vvn
 	};
 
 	struct Project;
-	void createIpWithVivadoGUI(const Project& proj, std::span<std::string_view> args);
+	zst::Result<void, std::string> createIpWithVivadoGUI(const Project& proj, std::span<std::string_view> args);
 }

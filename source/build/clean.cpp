@@ -20,7 +20,7 @@ namespace vvn
 		if(auto a = args::checkValidArgs(args, { args::ALL, args::IPS }); a.has_value())
 			return ErrFmt("invalid clean flag '{}', try '--help'", *a);
 
-		if(args::checkArgument(args, args::HELP))
+		if(args::check(args, args::HELP))
 		{
 			help::showCleanHelp();
 			return Ok();
@@ -29,10 +29,10 @@ namespace vvn
 		bool clean_dcps = false;
 		bool clean_ips = false;
 
-		if((args.size() == 1) || args::checkArgument(args, args::ALL))
+		if((args.size() == 1) || args::check(args, args::ALL))
 			clean_dcps = true;
 
-		if(args::checkArgument(args, args::IPS) || args::checkArgument(args, args::ALL))
+		if(args::check(args, args::IPS) || args::check(args, args::ALL))
 			clean_ips = true;
 
 		// always yeet this

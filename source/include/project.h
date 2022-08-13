@@ -80,6 +80,8 @@ namespace vvn
 	{
 		Project(const ProjectConfig& config);
 
+		Vivado launchVivado() const;
+
 		zst::Result<void, std::string> setup(Vivado& vivado) const;
 		zst::Result<void, std::string> clean(std::span<std::string_view> args) const;
 		zst::Result<void, std::string> buildAll(Vivado& vivado, std::span<std::string_view> args) const;
@@ -96,7 +98,6 @@ namespace vvn
 		{
 			return this->writeBitstream(vivado, std::move(args), /* use_prev: */ false);
 		}
-
 
 		struct IpInst
 		{

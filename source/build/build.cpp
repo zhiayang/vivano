@@ -74,7 +74,7 @@ namespace vvn
 		if(auto a = args::checkValidArgs(args, { }); a.has_value())
 			return ErrFmt("unsupported option '{}', try '--help'", *a);
 
-		if(args::checkArgument(args, args::HELP))
+		if(args::check(args, args::HELP))
 		{
 			help::showBuildHelp();
 			return Ok();

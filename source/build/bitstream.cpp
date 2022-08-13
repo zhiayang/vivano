@@ -39,14 +39,14 @@ namespace vvn
 		if(auto a = args::checkValidArgs(args, { args::FORCE_BUILD, args::USE_STALE }); a.has_value())
 			return ErrFmt("unsupported option '{}', try '--help'", *a);
 
-		if(args::checkArgument(args, args::HELP))
+		if(args::check(args, args::HELP))
 		{
 			help::showBitstreamHelp();
 			return Ok(false);
 		}
 
-		auto allow_stale = args::checkArgument(args, args::USE_STALE);
-		auto force_build = args::checkArgument(args, args::FORCE_BUILD);
+		auto allow_stale = args::check(args, args::USE_STALE);
+		auto force_build = args::check(args, args::FORCE_BUILD);
 
 		if(not this->should_rewrite_bitstream(vivado, allow_stale) && not force_build)
 		{

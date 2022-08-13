@@ -20,18 +20,13 @@ namespace vvn
 	static constexpr std::string_view PROMPT_STRING = "@PROMPT@";
 	static constexpr std::string_view PROMPT_STRING_NEWLINE = "@PROMPT@\n";
 
-	static zpp::Process spawn_vivado(std::optional<stdfs::path> journal_file)
+	static zpp::Process spawn_vivado(stdfs::path working_dir)
 	{
 		std::vector<std::string> args = {
-			"-mode", "tcl", "-notrace", "-nolog"
+			"-mode", "tcl", "-notrace", "-nolog", "-nojournal"
 		};
 
-		if(journal_file.has_value())
-			args.push_back("-journal"), args.push_back(journal_file->string());
-		else
-			args.push_back("-nojournal");
-
-		auto proc = zpp::runProcess("vivado", args);
+		auto proc = zpp::runProcess("vivado", args, working_dir);
 		if(not proc.first.has_value())
 			vvn::error_and_exit("failed to launch vivado: {}", proc.second);
 
@@ -99,8 +94,10 @@ namespace vvn
 		m_process.terminateAll();
 	}
 
-	Vivado::Vivado(const MsgConfig& msg_config, std::optional<stdfs::path> journal_file)
-		: m_msg_config(&msg_config), m_process(spawn_vivado(std::move(journal_file)))
+	Vivado::Vivado(const MsgConfig& msg_config) : Vivado(msg_config, stdfs::current_path()) {}
+
+	Vivado::Vivado(const MsgConfig& msg_config, stdfs::path working_dir)
+		: m_msg_config(&msg_config), m_process(spawn_vivado(std::move(working_dir)))
 	{
 		using namespace std::chrono_literals;
 		vvn::log("starting vivado...");

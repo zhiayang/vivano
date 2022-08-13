@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "util.h"
+#include "vivado.h"
 #include "vivano.h"
 #include "project.h"
 
@@ -26,6 +27,11 @@ namespace vvn
 	stdfs::path Project::get_bitstream_name() const
 	{
 		return m_build_folder / zpr::sprint("{}.bit", m_project_name);
+	}
+
+	Vivado Project::launchVivado() const
+	{
+		return Vivado(m_msg_config, m_location);
 	}
 
 	Project::Project(const ProjectConfig& config)

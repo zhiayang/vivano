@@ -43,7 +43,7 @@ namespace vvn
 
 	void createProject(std::span<std::string_view> args)
 	{
-		if(args::checkArgument(args, args::HELP) || args.size() < 2)
+		if(args::check(args, args::HELP) || args.size() < 2)
 		{
 			vvn::help::showInitHelp();
 			return;

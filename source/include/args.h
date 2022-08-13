@@ -18,7 +18,7 @@ namespace vvn
 	{
 		using Arg = std::pair<std::string_view, std::string_view>;
 
-		bool checkArgument(std::span<std::string_view> args, const Arg& arg);
+		bool check(std::span<std::string_view> args, const Arg& arg);
 		std::optional<std::string_view> checkValidArgs(std::span<std::string_view> args, const util::hashset<Arg>& known);
 
 		static constexpr Arg HELP           = { "-h", "--help" };

@@ -110,13 +110,13 @@ namespace vvn
 		if(auto a = args::checkValidArgs(args, { args::FORCE_BUILD }); a.has_value())
 			return ErrFmt("unsupported option '{}', try '--help'", *a);
 
-		if(args::checkArgument(args, args::HELP))
+		if(args::check(args, args::HELP))
 		{
 			help::showSynthHelp();
 			return Ok(false);
 		}
 
-		auto force_build = args::checkArgument(args, args::FORCE_BUILD);
+		auto force_build = args::check(args, args::FORCE_BUILD);
 		if(not this->should_resynthesise(vivado) && not force_build)
 		{
 			vvn::log("synthesis up to date");

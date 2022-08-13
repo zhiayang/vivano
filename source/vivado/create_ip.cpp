@@ -80,15 +80,18 @@ namespace vvn
 		return ret;
 	}
 
-	void createIpWithVivadoGUI(const Project& proj, std::span<std::string_view> args)
+	zst::Result<void, std::string> createIpWithVivadoGUI(const Project& proj, std::span<std::string_view> args)
 	{
 		using namespace std::chrono_literals;
 
 		if(auto a = args::checkValidArgs(args, {}); a.has_value())
-			return vvn::error("unsupported option '{}', try '--help'", *a);
+			return ErrFmt("unsupported option '{}', try '--help'", *a);
 
-		if(args::checkArgument(args, args::HELP))
-			return help::showCreateIpHelp();
+		if(args::check(args, args::HELP))
+		{
+			help::showCreateIpHelp();
+			return Ok();
+		}
 
 		auto vivado = Vivado({});
 		vivado.setMsgConfig(proj.getMsgConfig());
@@ -108,7 +111,7 @@ namespace vvn
 				fake_proj, fake_proj, fake_proj);
 
 			if(vivado.streamCommand(foo.c_str()).has_errors())
-				return vvn::error("error creating temporary project");
+				return ErrFmt("error creating temporary project");
 
 			// touch the file
 			fclose(fopen((stdfs::path(fake_proj) / journal_name).c_str(), "wb"));
@@ -133,7 +136,7 @@ namespace vvn
 		auto last_update = std::chrono::steady_clock::now();
 		auto journal_file = fopen((stdfs::path(fake_proj) / journal_name).c_str(), "rb");
 		if(journal_file == nullptr)
-			return vvn::error("couldn't open journal: {} ({})", strerror(errno), errno);
+			return ErrFmt("couldn't open journal: {} ({})", strerror(errno), errno);
 
 		auto d3 = util::Defer([&]() {
 			fclose(journal_file);
@@ -193,7 +196,7 @@ namespace vvn
 			if(not vivado.alive())
 			{
 				vvn::warn("vivado exited before printing IP commands, cancelling");
-				return;
+				return Ok();
 			}
 		}
 
@@ -208,7 +211,7 @@ namespace vvn
 
 		auto tcl_file = proj.getIpLocation() / zpr::sprint("{}.tcl", ip_name);
 		if(stdfs::exists(tcl_file))
-			return vvn::error("file '{}.tcl' already exists, not overwriting", tcl_file.string());
+			return ErrFmt("file '{}.tcl' already exists, not overwriting", tcl_file.string());
 
 		auto f = fopen(tcl_file.c_str(), "wb");
 		fprintf(f, "%s\n", create_xci_cmd.c_str());
@@ -216,5 +219,6 @@ namespace vvn
 		fclose(f);
 
 		vvn::log("created tcl script '{}'", tcl_file.string());
+		return Ok();
 	}
 }

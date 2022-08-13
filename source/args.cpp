@@ -31,7 +31,7 @@ namespace vvn::args
 		return std::nullopt;
 	}
 
-	bool checkArgument(std::span<std::string_view> args, const Arg& arg)
+	bool check(std::span<std::string_view> args, const Arg& arg)
 	{
 		for(auto& a : args)
 		{

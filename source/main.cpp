@@ -55,49 +55,30 @@ int main(int argc, char** argv)
 	}
 	else if(command == vvn::CMD_INIT)
 	{
+		if(vvn::args::check(args, vvn::args::HELP))
+			vvn::help::showInitHelp(), exit(0);
+
 		vvn::createProject(args);
 		exit(0);
 	}
 
 	// if we are asking for help, don't bother to launch vivado
-	if(vvn::args::checkArgument(args, vvn::args::HELP))
+	if(vvn::args::check(args, vvn::args::HELP))
 	{
 		using namespace vvn;
 		using namespace vvn::help;
-		if(command == CMD_INIT)
-			showInitHelp();
-		else if(command == CMD_BUILD)
-			showBuildHelp();
-		else if(command == CMD_SYNTH)
-			showSynthHelp();
-		else if(command == CMD_IMPL)
-			showImplHelp();
-		else if(command == CMD_BITSREAM)
-			showBitstreamHelp();
-		else if(command == CMD_CLEAN)
-			showCleanHelp();
+		// else if(command == CMD_BUILD)
+		// 	showBuildHelp();
+		// else if(command == CMD_SYNTH)
+		// 	showSynthHelp();
+		// else if(command == CMD_IMPL)
+		// 	showImplHelp();
+		// else if(command == CMD_BITSREAM)
+		// 	showBitstreamHelp();
+		// else if(command == CMD_CLEAN)
+		// 	showCleanHelp();
 
 		exit(0);
-	}
-
-	constexpr auto one_of = [&](std::string_view sv, const auto& aa) -> bool {
-		return std::find(aa.begin(), aa.end(), sv) != aa.end();
-	};
-
-	auto supported_commands = std::vector {
-		vvn::CMD_CREATE_IP,
-		vvn::CMD_BUILD,
-		vvn::CMD_SYNTH,
-		vvn::CMD_IMPL,
-		vvn::CMD_BITSREAM,
-		vvn::CMD_CLEAN
-	};
-
-	if(not one_of(command, supported_commands))
-	{
-		zpr::println("unsupported command '{}'", command);
-		vvn::help::showCommandList();
-		exit(1);
 	}
 
 	// try to read a vivano-project.json
@@ -106,51 +87,75 @@ int main(int argc, char** argv)
 		vvn::error_and_exit("failed to read project json: {}", config_or_err.error());
 
 	auto project = vvn::Project(config_or_err.unwrap());
+	zst::Result<void, std::string> result {};
+
+	using namespace vvn;
 	if(command == vvn::CMD_CLEAN)
 	{
-		auto e = project.clean(args);
-		if(e.is_err())
-			zpr::fprintln(stderr, "\nfailed: {}", e.error());
+		if(args::check(args, args::HELP))
+			help::showCleanHelp(), exit(0);
 
-		exit(e.is_err() ? 1 : 0);
+		result = project.clean(args);
 	}
 	else if(command == vvn::CMD_CREATE_IP)
 	{
-		vvn::createIpWithVivadoGUI(project, args);
-		exit(0);
+		if(args::check(args, args::HELP))
+			help::showCreateIpHelp(), exit(0);
+
+		result = vvn::createIpWithVivadoGUI(project, args);
 	}
-
-	auto vivado = vvn::Vivado(project.getMsgConfig());
-
-	zst::Result<void, std::string> result {};
-	if(command == vvn::CMD_BUILD)
+	else if(command == vvn::CMD_BUILD)
 	{
+		if(args::check(args, args::HELP))
+			help::showBuildHelp(), exit(0);
+
+		auto vivado = project.launchVivado();
 		result = project.setup(vivado).flatmap([&]() {
 			return project.buildAll(vivado, args);
 		});
 	}
 	else if(command == vvn::CMD_SYNTH)
 	{
+		if(args::check(args, args::HELP))
+			help::showSynthHelp(), exit(0);
+
+		auto vivado = project.launchVivado();
 		result = project.setup(vivado).flatmap([&]() {
 			return project.synthesise(vivado, args).remove_value();
 		});
 	}
 	else if(command == vvn::CMD_IMPL)
 	{
+		if(args::check(args, args::HELP))
+			help::showImplHelp(), exit(0);
+
+		auto vivado = project.launchVivado();
 		result = project.setup(vivado).flatmap([&]() {
 			return project.implement(vivado, args).remove_value();
 		});
 	}
 	else if(command == vvn::CMD_BITSREAM)
 	{
+		if(args::check(args, args::HELP))
+			help::showBitstreamHelp(), exit(0);
+
+		auto vivado = project.launchVivado();
 		result = project.setup(vivado).flatmap([&]() {
 			return project.writeBitstream(vivado, args).remove_value();
 		});
 	}
+	else
+	{
+		// TODO: repl mode
+		zpr::println("unsupported command '{}'", command);
+		vvn::help::showCommandList();
+		exit(1);
+	}
+
 
 	if(result.is_err())
 	{
-		zpr::fprintln(stderr, "\naborting: {}", result.error());
+		zpr::fprintln(stderr, "\nerror encountered: {}", result.error());
 		exit(1);
 	}
 }
