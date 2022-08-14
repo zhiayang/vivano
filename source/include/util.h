@@ -75,6 +75,8 @@ namespace util
 	std::string prettyFormatTextBlock(const std::string& block, const char* leftMargin, const char* rightMargin,
 		bool no_margin_on_first_line = false);
 
+	stdfs::path getHomeFolder();
+
 	size_t getTerminalWidth();
 
 	std::string readEntireFile(std::string_view path);

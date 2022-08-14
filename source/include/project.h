@@ -25,10 +25,11 @@ namespace stdfs = std::filesystem;
 
 namespace vvn
 {
-	static constexpr const char* PROJECT_JSON_FILENAME = "vivano-project.json";
+	static constexpr const char* PROJECT_JSON_FILENAME          = "vivano-project.json";
+	static constexpr const char* VIVADO_INSTALL_DIR_FILENAME    = ".vivado-install-dir.txt";
 
-	static constexpr const char* PROJECT_SYNTHESISED_DCP_NAME = "synthesised.dcp";
-	static constexpr const char* PROJECT_IMPLEMENTED_DCP_NAME = "implemented.dcp";
+	static constexpr const char* PROJECT_SYNTHESISED_DCP_NAME   = "synthesised.dcp";
+	static constexpr const char* PROJECT_IMPLEMENTED_DCP_NAME   = "implemented.dcp";
 
 	struct ProjectConfig
 	{
@@ -38,6 +39,8 @@ namespace vvn
 
 		stdfs::path location;
 		stdfs::path build_folder;
+
+		stdfs::path vivado_installation_dir;
 
 		std::string synthesised_dcp_name;
 		std::string implemented_dcp_name;
@@ -63,6 +66,8 @@ namespace vvn
 			std::string xci_subdir;
 
 			bool auto_find_sources;
+
+			util::hashset<std::string> global_ips;
 
 		} ip_config;
 
@@ -104,6 +109,7 @@ namespace vvn
 			std::string name;
 			stdfs::path tcl;
 			stdfs::path xci;
+			bool is_global = false;
 		};
 
 		const MsgConfig& getMsgConfig() const { return m_msg_config; }
@@ -137,6 +143,7 @@ namespace vvn
 		stdfs::path m_build_folder;
 		stdfs::path m_ip_folder;
 		stdfs::path m_xci_folder;
+		stdfs::path m_vivado_dir;
 
 		std::string m_synthesised_dcp_name;
 		std::string m_implemented_dcp_name;

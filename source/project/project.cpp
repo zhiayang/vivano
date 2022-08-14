@@ -31,7 +31,7 @@ namespace vvn
 
 	Vivado Project::launchVivado() const
 	{
-		return Vivado(m_msg_config, m_location);
+		return Vivado(m_vivado_dir, m_msg_config, m_location);
 	}
 
 	Project::Project(const ProjectConfig& config)
@@ -50,6 +50,10 @@ namespace vvn
 		m_msg_config = config.messages_config;
 		m_synthesised_dcp_name = config.synthesised_dcp_name;
 		m_implemented_dcp_name = config.implemented_dcp_name;
+
+		m_vivado_dir = config.vivado_installation_dir;
+		if(auto s = m_vivado_dir.string(); s.starts_with("~/") || s.starts_with("~\\"))
+			m_vivado_dir = stdfs::canonical(util::getHomeFolder() / s.substr(2));
 
 		// source files and constraints
 		if(config.sources_config.auto_find_sources)
@@ -116,6 +120,7 @@ namespace vvn
 					/ inst.name
 					/ stdfs::path(inst.name).replace_extension(".xci");
 
+				inst.is_global = config.ip_config.global_ips.contains(inst.name);
 				m_ip_instances.push_back(std::move(inst));
 			}
 		}

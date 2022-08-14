@@ -93,8 +93,7 @@ namespace vvn
 			return Ok();
 		}
 
-		auto vivado = Vivado({});
-		vivado.setMsgConfig(proj.getMsgConfig());
+		auto vivado = proj.launchVivado();
 
 		constexpr auto fake_proj = "temporary-ip-project";
 		auto d1 = util::Defer([&]() {

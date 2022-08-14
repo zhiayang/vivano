@@ -240,6 +240,13 @@ namespace vvn
 					return Err(foo.error());
 				ip.auto_find_sources = foo.unwrap();
 			}
+
+			{
+				auto foo = read_string_array(obj, "global_ips");
+				if(foo.is_err())
+					return Err(foo.error());
+				ip.global_ips.insert(foo->begin(), foo->end());
+			}
 		}
 
 		return Ok();
@@ -438,6 +445,11 @@ namespace vvn
 		else
 			proj.implemented_dcp_name = impl_dcp.unwrap();
 
+		if(auto vivado_dir = read_string(json_top, "vivado_install_dir", ""); vivado_dir.is_err())
+			return Err(vivado_dir.error());
+		else if(not vivado_dir->empty())
+			proj.vivado_installation_dir = vivado_dir.unwrap();
+
 		if(auto x = parseSourcesJson(proj, json_top); x.is_err())
 			return Err(x.error());
 
@@ -446,6 +458,20 @@ namespace vvn
 
 		if(auto x = parseMessagesJson(proj, json_top); x.is_err())
 			return Err(x.error());
+
+		// parse the install dir, if it exists.
+		{
+			auto install_file = proj.location / VIVADO_INSTALL_DIR_FILENAME;
+			if(stdfs::exists(install_file))
+			{
+				auto file = util::readEntireFile(install_file.string());
+				auto tmp = util::splitString(file, '\n')[0];
+				vvn::log("using vivado installation at '{}'", tmp);
+				proj.vivado_installation_dir = tmp;
+			}
+		}
+
+
 
 		return Ok(std::move(proj));
 	}

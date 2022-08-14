@@ -31,19 +31,13 @@ namespace vvn
 		zpr::println("creating project: '{}' using part '{}'",
 			proj_name, part_name);
 
-		zpr::println("checking that '{}' is a valid part", part_name);
-
-		auto vivado = vvn::Vivado(MsgConfig{});
-		if(not vivado.partExists(part_name))
-			vvn::error_and_exit("part '{}' does not exist (check licenses?)", part_name);
-
 		vvn::log("writing project to '{}'", PROJECT_JSON_FILENAME);
 		writeDefaultProjectJson(part_name, proj_name);
 	}
 
 	void createProject(std::span<std::string_view> args)
 	{
-		if(args::check(args, args::HELP) || args.size() < 2)
+		if(args::check(args, args::HELP) || args.size() < 1)
 		{
 			vvn::help::showInitHelp();
 			return;
@@ -51,7 +45,7 @@ namespace vvn
 
 		auto part_name = std::string(args[1]);
 		std::optional<std::string> proj_name_opt {};
-		if(args.size() > 2)
+		if(args.size() > 1)
 			proj_name_opt = std::string(args[2]);
 
 		create_project(std::move(part_name), std::move(proj_name_opt));

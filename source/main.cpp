@@ -102,6 +102,7 @@ int main(int argc, char** argv)
 	else if(command == vvn::CMD_VERSION)
 	{
 		zpr::println("vivano build tool   version {}", VERSION);
+		exit(0);
 	}
 	else if(command == vvn::CMD_HELP)
 	{

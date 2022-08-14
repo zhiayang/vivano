@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cassert>
 
+#include <cstdlib>
 #include <unistd.h>
 
 #include <span>
@@ -133,9 +134,21 @@ namespace util
 
 
 
+#include <pwd.h>
 
+stdfs::path util::getHomeFolder()
+{
+	#if defined(_WIN32)
+		#error "not support";
+	#else
+		auto home = std::getenv("HOME");
+		if(home != nullptr)
+			return stdfs::path(home);
 
-
+		struct passwd* pw = getpwuid(getuid());
+		return stdfs::path(pw->pw_dir);
+	#endif
+}
 
 
 
@@ -179,16 +192,17 @@ std::string util::colourise(std::string_view sv, int severity)
 	if(not is_tty())
 		return std::string(sv);
 
-	constexpr std::string_view COLOUR_LOG = "\x1b[30;1m";
-	constexpr std::string_view COLOUR_WARN = "\x1b[1m\x1b[33m";
-	constexpr std::string_view COLOUR_CRIT = "\x1b[1m\x1b[31m";
+	constexpr std::string_view COLOUR_INFO  = "\x1b[30;1m";
+	constexpr std::string_view COLOUR_LOG   = "\x1b[94;1m";
+	constexpr std::string_view COLOUR_WARN  = "\x1b[1m\x1b[33m";
+	constexpr std::string_view COLOUR_CRIT  = "\x1b[1m\x1b[31m";
 	constexpr std::string_view COLOUR_ERROR = "\x1b[1m\x1b[37m\x1b[101m";
 	constexpr std::string_view COLOUR_RESET = "\x1b[0m";
 
 	std::string_view colour {};
 	switch(severity)
 	{
-		case 0: [[fallthrough]];
+		case 0: colour = COLOUR_INFO; break;
 		case 1: colour = COLOUR_LOG; break;
 		case 2: colour = COLOUR_WARN; break;
 		case 3: colour = COLOUR_CRIT; break;

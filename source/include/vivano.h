@@ -47,14 +47,14 @@ namespace vvn
 	template <typename... Args>
 	void error(const char* fmt, Args&&... args)
 	{
-		zpr::fprintln(stderr, "{}{} {}", indentStr(), util::colourise("[vvn-err]", 3),
+		zpr::fprintln(stderr, "{}{} {}", indentStr(), util::colourise("* error:", 3),
 			zpr::fwd(fmt, static_cast<Args&&>(args)...));
 	}
 
 	template <typename... Args>
 	[[noreturn]] void error_and_exit(const char* fmt, Args&&... args)
 	{
-		zpr::fprintln(stderr, "{}{} {}", indentStr(), util::colourise("[vvn-err]", 3),
+		zpr::fprintln(stderr, "{}{} {}", indentStr(), util::colourise("* error:", 3),
 			zpr::fwd(fmt, static_cast<Args&&>(args)...));
 		exit(1);
 	}
@@ -62,14 +62,14 @@ namespace vvn
 	template <typename... Args>
 	void log(const char* fmt, Args&&... args)
 	{
-		zpr::println("{}{} {}", indentStr(), util::colourise("[vvn-log]", 0),
+		zpr::println("{}{} {}", indentStr(), util::colourise("#", 0),
 			zpr::fwd(fmt, static_cast<Args&&>(args)...));
 	}
 
 	template <typename... Args>
 	void warn(const char* fmt, Args&&... args)
 	{
-		zpr::println("{}{} {}", indentStr(), util::colourise("[vvn-wrn]", 2),
+		zpr::println("{}{} {}", indentStr(), util::colourise("* warning:", 2),
 			zpr::fwd(fmt, static_cast<Args&&>(args)...));
 	}
 }

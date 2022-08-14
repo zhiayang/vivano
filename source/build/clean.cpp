@@ -29,7 +29,7 @@ namespace vvn
 		bool clean_dcps = false;
 		bool clean_ips = false;
 
-		if((args.size() == 1) || args::check(args, args::ALL))
+		if(args.empty() || args::check(args, args::ALL))
 			clean_dcps = true;
 
 		if(args::check(args, args::IPS) || args::check(args, args::ALL))

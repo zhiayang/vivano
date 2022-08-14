@@ -20,13 +20,26 @@ namespace vvn
 	static constexpr std::string_view PROMPT_STRING = "@PROMPT@";
 	static constexpr std::string_view PROMPT_STRING_NEWLINE = "@PROMPT@\n";
 
-	static zpp::Process spawn_vivado(stdfs::path working_dir)
+	static zpp::Process spawn_vivado(stdfs::path vivado_path, stdfs::path working_dir, std::vector<std::string> args)
 	{
-		std::vector<std::string> args = {
-			"-mode", "tcl", "-notrace", "-nolog", "-nojournal"
-		};
+		if(args.empty())
+			args = { "-mode", "tcl", "-notrace", "-nolog", "-nojournal" };
 
-		auto proc = zpp::runProcess("vivado", args, working_dir);
+		std::string vivado {};
+		if(vivado_path.empty())
+		{
+			vivado = "vivado";
+		}
+		else
+		{
+			vivado_path = vivado_path / "bin" / "vivado";
+			if(not stdfs::exists(vivado_path))
+				vvn::error_and_exit("could not find vivado binary at '{}'", vivado_path.string());
+
+			vivado = vivado_path.string();
+		}
+
+		auto proc = zpp::runProcess(vivado, args, working_dir);
 		if(not proc.first.has_value())
 			vvn::error_and_exit("failed to launch vivado: {}", proc.second);
 
@@ -38,11 +51,7 @@ namespace vvn
 		auto cwd = working_dir.has_value() ? *working_dir : stdfs::current_path();
 
 		m_process.terminate();
-		auto proc = zpp::runProcess("vivado", args, cwd);
-		if(not proc.first.has_value())
-			vvn::error_and_exit("failed to launch vivado: {}", proc.second);
-
-		m_process = std::move(*proc.first);
+		m_process = spawn_vivado(m_vivado_path, cwd, args);
 	}
 
 	void Vivado::send_prompt_marker()
@@ -94,10 +103,10 @@ namespace vvn
 		m_process.terminateAll();
 	}
 
-	Vivado::Vivado(const MsgConfig& msg_config) : Vivado(msg_config, stdfs::current_path()) {}
+	Vivado::Vivado(stdfs::path vivado_path, const MsgConfig& msg_config) : Vivado(vivado_path, msg_config, stdfs::current_path()) {}
 
-	Vivado::Vivado(const MsgConfig& msg_config, stdfs::path working_dir)
-		: m_msg_config(&msg_config), m_process(spawn_vivado(std::move(working_dir)))
+	Vivado::Vivado(stdfs::path vivado_path, const MsgConfig& msg_config, stdfs::path working_dir)
+		: m_msg_config(&msg_config), m_process(spawn_vivado(std::move(vivado_path), std::move(working_dir), {}))
 	{
 		using namespace std::chrono_literals;
 		vvn::log("starting vivado...");

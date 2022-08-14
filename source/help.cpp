@@ -70,9 +70,13 @@ optionally a 'project_name' (defaults to the current folder name).
 usage: vvn build [options]
 
 Options:
-    -h, --help      show this help
-    -s, --stale     allow using stale design checkpoints, even if they are older than sources
-    -f, --force     force a rebuild even if sources are up to date
+    -h,  --help             show this help
+    -s,  --stale            allow using stale design checkpoints,
+    						even if they are older than sources
+    -f,  --force            force a rebuild even if sources are up to date
+    -v,  --verbose          print all messages, including suppressed ones
+    -vv, --very-verbose     same as -v, but also print messages from IP synthesis
+    -g,  --global           perform global synthesis for IPs, instead of OOC
 )");
 	}
 
@@ -82,8 +86,11 @@ Options:
 usage: vvn synth [options]
 
 Options:
-    -h, --help      show this help
-    -f, --force     force a rebuild even if sources are up to date
+    -h,  --help             show this help
+    -f,  --force            force a rebuild even if sources are up to date
+    -v,  --verbose          print all messages, including suppressed ones
+    -vv, --very-verbose     same as -v, but also print messages from IP synthesis
+    -g,  --global           perform global synthesis for IPs, instead of OOC
 )");
 	}
 
@@ -93,9 +100,12 @@ Options:
 usage: vvn impl [options]
 
 Options:
-    -h, --help      show this help
-    -s, --stale     allow using stale design checkpoints, even if they are older than sources
-    -f, --force     force a rebuild even if sources are up to date
+    -h,  --help             show this help
+    -s,  --stale            allow using stale design checkpoints,
+    						even if they are older than sources
+    -f,  --force            force a rebuild even if sources are up to date
+    -v,  --verbose          print all messages, including suppressed ones
+    -vv, --very-verbose     same as -v, but also print messages from IP synthesis
 )");
 	}
 
@@ -105,9 +115,12 @@ Options:
 usage: vvn bitstream [options]
 
 Options:
-    -h, --help      show this help
-    -s, --stale     allow using stale design checkpoints, even if they are older than sources
-    -f, --force     force a rebuild even if sources are up to date
+    -h,  --help             show this help
+    -s,  --stale            allow using stale design checkpoints,
+    						even if they are older than sources
+    -f,  --force            force a rebuild even if sources are up to date
+    -v,  --verbose          print all messages, including suppressed ones
+    -vv, --very-verbose     same as -v, but also print messages from IP synthesis
 )");
 	}
 

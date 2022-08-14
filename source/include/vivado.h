@@ -61,8 +61,8 @@ namespace vvn
 	struct Vivado
 	{
 		~Vivado();
-		Vivado(const MsgConfig& msg_config);
-		Vivado(const MsgConfig& msg_config, stdfs::path working_dir);
+		Vivado(stdfs::path vivado_path, const MsgConfig& msg_config);
+		Vivado(stdfs::path vivado_path, const MsgConfig& msg_config, stdfs::path working_dir);
 
 		Vivado(Vivado&&) = default;
 		Vivado& operator= (Vivado&&) = default;
@@ -105,6 +105,8 @@ namespace vvn
 
 	private:
 		const MsgConfig* m_msg_config = nullptr;
+
+		stdfs::path m_vivado_path;
 
 		zpp::Process m_process;
 		std::string m_output_buffer;
