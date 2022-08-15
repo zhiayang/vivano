@@ -35,6 +35,13 @@ namespace vvn
 		std::string_view code;
 		std::string_view message;
 
+		struct Loc
+		{
+			std::string_view path;
+			int line;
+		};
+		std::optional<Loc> location;
+
 		bool print(const MsgConfig& msg_cfg) const;
 	};
 
@@ -98,15 +105,18 @@ namespace vvn
 		bool partExists(const std::string& part) const;
 
 		bool alive() const;
-		void close();
+		void close(bool quiet = false);
 		void forceClose();
 		void relaunchWithArgs(const std::vector<std::string>& args,
 			const std::optional<stdfs::path>& working_dir = std::nullopt);
+
+		stdfs::path workingDirectory() const { return m_working_dir; }
 
 	private:
 		const MsgConfig* m_msg_config = nullptr;
 
 		stdfs::path m_vivado_path;
+		stdfs::path m_working_dir;
 
 		zpp::Process m_process;
 		std::string m_output_buffer;
@@ -118,7 +128,4 @@ namespace vvn
 		CommandOutput run_command(const std::string& cmd);
 		CommandOutput stream_command(const std::string& cmd);
 	};
-
-	struct Project;
-	zst::Result<void, std::string> createIpWithVivadoGUI(const Project& proj, std::span<std::string_view> args);
 }

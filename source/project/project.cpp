@@ -31,7 +31,14 @@ namespace vvn
 
 	Vivado Project::launchVivado() const
 	{
-		return Vivado(m_vivado_dir, m_msg_config, m_location);
+		auto vivado = Vivado(m_vivado_dir, m_msg_config, m_location);
+		for(auto& tcl : m_tcl_scripts)
+		{
+			auto tmp = stdfs::relative(tcl, m_location);
+			if(vivado.streamCommand("source \"{}\"", tmp.string()).has_errors())
+				vvn::error("failed to source tcl script '{}'", tmp.string());
+		}
+		return vivado;
 	}
 
 	Project::Project(const ProjectConfig& config)
@@ -48,12 +55,16 @@ namespace vvn
 		m_xci_folder = config.ip_config.location / config.ip_config.xci_subdir;
 
 		m_msg_config = config.messages_config;
+		m_msg_config.project_path = m_location;
 		m_synthesised_dcp_name = config.synthesised_dcp_name;
 		m_implemented_dcp_name = config.implemented_dcp_name;
 
 		m_vivado_dir = config.vivado_installation_dir;
 		if(auto s = m_vivado_dir.string(); s.starts_with("~/") || s.starts_with("~\\"))
 			m_vivado_dir = stdfs::canonical(util::getHomeFolder() / s.substr(2));
+
+		for(auto& tcl : config.sources_config.tcl_scripts)
+			m_tcl_scripts.push_back(m_location / tcl);
 
 		// source files and constraints
 		if(config.sources_config.auto_find_sources)
@@ -111,7 +122,7 @@ namespace vvn
 		{
 			for(auto& tcl : util::find_files_ext(m_location / config.ip_config.location, ".tcl"))
 			{
-				IpInst inst {};
+				IpInstance inst {};
 				inst.tcl = tcl;
 				inst.name = tcl.stem().string();
 				inst.xci = m_location
@@ -123,10 +134,28 @@ namespace vvn
 				inst.is_global = config.ip_config.global_ips.contains(inst.name);
 				m_ip_instances.push_back(std::move(inst));
 			}
+
+			// sort the IPs because why not
+			std::sort(m_ip_instances.begin(), m_ip_instances.end(), [](auto& a, auto& b) {
+				if(a.is_global == b.is_global)
+					return a.name < b.name;
+
+				return b.is_global;
+			});
 		}
 		else
 		{
 			vvn::error_and_exit("unsupported");
 		}
+	}
+
+	const IpInstance* Project::getIpWithName(std::string_view name) const
+	{
+		for(auto& ip : m_ip_instances)
+		{
+			if(ip.name == name)
+				return &ip;
+		}
+		return nullptr;
 	}
 }

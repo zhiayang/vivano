@@ -2,9 +2,12 @@
 // Copyright (c) 2022, zhiayang
 // SPDX-License-Identifier: Apache-2.0
 
-#include <algorithm>
+#include <cctype>
 #include <cassert>
+
+#include <string>
 #include <optional>
+#include <algorithm>
 #include <string_view>
 
 #include "util.h"
@@ -38,8 +41,44 @@ namespace vvn
 		msg.code = sv.substr(0, i);
 		sv.remove_prefix(2 + msg.code.size());
 
+		// idk how to check for this properly, so this is a little scuffed.
+		if(sv.back() == ']')
+		{
+			// scan for the '['
+			auto open_loc = sv.find_last_of('[');
+			if(open_loc == std::string_view::npos)
+				goto cancel;
+
+			auto location = sv.substr(open_loc + 1, sv.size() - open_loc - 2);
+			if(location.empty())
+				goto cancel;
+
+			Message::Loc loc;
+
+			// get the line number. extra check is needed because of drive letter for windows
+			if(auto k = location.find_last_of(':'); k != std::string_view::npos && std::isdigit(location[k + 1]))
+			{
+				loc.path = location.substr(0, k);
+				if(auto i = util::parseInt(location.substr(k + 1)); i.has_value())
+					loc.line = *i;
+				else
+					loc.line = 1;
+			}
+			else
+			{
+				loc.path = location;
+				loc.line = 1;
+			}
+
+			msg.location = std::move(loc);
+			msg.message = sv.substr(0, open_loc);
+			goto success;
+		}
+
+	cancel:
 		msg.message = sv;
 
+	success:
 		if(auto it = msg_cfg.severity_overrides.find(msg.code); it != msg_cfg.severity_overrides.end())
 			msg.severity = it->second;
 
@@ -66,10 +105,19 @@ namespace vvn
 		if(msg_cfg.print_message_ids)
 			tmp += zpr::sprint(" (id: {})", this->code);
 
-		zpr::println("{}{}{} {}", indentStr(1),
+		std::string error_location;
+		if(auto loc = this->location; this->location.has_value())
+		{
+			error_location = zpr::sprint("{}:{}: ", stdfs::relative(loc->path, msg_cfg.project_path).string(),
+				loc->line);
+		}
+
+		zpr::println("{}{}{} {}{}", indentStr(1),
 			util::colourise(kinds[this->severity], this->severity),
 			spaces[this->severity],
-			util::prettyFormatTextBlock(tmp, "            ", "   ", /* skip-left-margin-on-first-line: */ true)
+			error_location,
+			tmp
+			// util::prettyFormatTextBlock(tmp, "            ", "   ", /* skip-left-margin-on-first-line: */ true)
 		);
 
 		return true;

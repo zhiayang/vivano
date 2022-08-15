@@ -10,6 +10,7 @@
 #include <chrono>
 #include <vector>
 #include <string>
+#include <optional>
 #include <filesystem>
 #include <string_view>
 #include <unordered_map>
@@ -76,8 +77,11 @@ namespace util
 		bool no_margin_on_first_line = false);
 
 	stdfs::path getHomeFolder();
-
 	size_t getTerminalWidth();
+
+	std::string lowercase(std::string_view sv);
+
+	std::optional<int> parseInt(std::string_view sv);
 
 	std::string readEntireFile(std::string_view path);
 	std::vector<std::string_view> splitString(std::string_view str, char delim);

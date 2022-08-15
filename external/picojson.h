@@ -884,7 +884,9 @@ template <typename Context, typename Iter> inline bool _parse_array(Context &ctx
       in.line_++;
     }
 
-    if (!ctx.parse_array_item(in, idx)) {
+    if (in.expect(']')) {
+      return ctx.parse_array_stop(idx);
+    } else if (!ctx.parse_array_item(in, idx)) {
       return false;
     }
     idx++;
@@ -915,11 +917,11 @@ template <typename Context, typename Iter> inline bool _parse_object(Context &ct
         in.cur_++;
       in.line_++;
     }
-
-    if (!in.expect('"') || !_parse_string(key, in) || !in.expect(':')) {
+    if (in.expect('}')) {
+      return true;
+    } else if (!in.expect('"') || !_parse_string(key, in) || !in.expect(':')) {
       return false;
-    }
-    if (!ctx.parse_object_item(in, key)) {
+    } else if (!ctx.parse_object_item(in, key)) {
       return false;
     }
   } while (in.expect(','));

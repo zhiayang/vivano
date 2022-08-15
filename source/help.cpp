@@ -26,7 +26,7 @@ Commands:
     synth           perform synthesis
     impl            perform implementation
     bitstream       write the bitstream
-    create-ip       open Vivado to instantiate IP via the GUI
+    ip              perform IP operations
 )");
 	}
 
@@ -43,17 +43,6 @@ If no options are specified, only design checkpoints and bitstreams are cleaned.
 )");
 	}
 
-	void showCreateIpHelp()
-	{
-		zpr::println(R"(
-usage: vvn create-ip
-
-Launches the Vivado GUI; go to the IP catalog and instantiate and customise an IP.
-Once the IP has been customised (click 'OK'), the GUI will close automatically, and
-the customised IP will be added to the project.
-)");
-	}
-
 	void showInitHelp()
 	{
 		zpr::println(R"(
@@ -61,6 +50,15 @@ usage: vvn init <part_name> [project_name]
 
 Initialise a new project using the given 'part_name', and
 optionally a 'project_name' (defaults to the current folder name).
+)");
+	}
+
+	void showCheckHelp()
+	{
+		zpr::println(R"(
+usage: vvn check
+
+Check the project for syntax errors
 )");
 	}
 

@@ -2,6 +2,7 @@
 // Copyright (c) 2022, zhiayang
 // SPDX-License-Identifier: Apache-2.0
 
+#include <cctype>
 #include <cstdio>
 #include <cassert>
 
@@ -14,6 +15,7 @@
 #include <utility>
 #include <fstream>
 #include <sstream>
+#include <charconv>
 #include <algorithm>
 #include <filesystem>
 #include <string_view>
@@ -26,54 +28,6 @@ namespace stdfs = std::filesystem;
 
 namespace util
 {
-	Timer::Timer() : start_time(std::chrono::steady_clock::now())
-	{
-	}
-
-	std::string prettyPrintTime(std::chrono::steady_clock::duration dur)
-	{
-		namespace stdc = std::chrono;
-		using namespace std::chrono_literals;
-
-		auto time = stdc::duration_cast<stdc::seconds>(dur).count();
-		std::string ret;
-
-		if(time >= 60 * 60)
-		{
-			ret += zpr::sprint("{}h ", time / (60 * 60));
-			time %= 60 * 60;
-		}
-
-		if(time >= 60)
-		{
-			ret += zpr::sprint("{}m ", time / 60);
-			time %= 60;
-		}
-
-		if(time > 0)
-		{
-			ret += zpr::sprint("{}s", time);
-		}
-		else if(ret.empty())
-		{
-			auto ms = stdc::duration_cast<stdc::milliseconds>(dur).count();
-			ret = zpr::sprint("{}ms", ms);
-		}
-
-		return ret;
-	}
-
-	std::string Timer::print() const
-	{
-		return prettyPrintTime(this->measure());
-	}
-
-	std::chrono::steady_clock::duration Timer::measure() const
-	{
-		return std::chrono::steady_clock::now() - this->start_time;
-	}
-
-
 	std::string readEntireFile(std::string_view path)
 	{
 		auto f = std::ifstream(std::string(path), std::ios::in | std::ios::binary);
@@ -129,6 +83,25 @@ namespace util
 		return find_files_recursively(dir, [&ext](auto ent) -> bool {
 			return ent.path().extension() == ext;
 		});
+	}
+
+
+	std::optional<int> parseInt(std::string_view sv)
+	{
+		int x = 0;
+		if(std::from_chars(sv.begin(), sv.end(), x).ec == std::errc{})
+			return x;
+		else
+			return std::nullopt;
+	}
+
+	std::string lowercase(std::string_view sv)
+	{
+		auto ret = std::string(sv);
+		for(size_t i = 0; i < ret.size(); i++)
+			ret[i] = static_cast<char>(std::tolower(sv[i]));
+
+		return ret;
 	}
 }
 

@@ -74,12 +74,6 @@ namespace vvn
 		if(auto a = args::checkValidArgs(args, { }); a.has_value())
 			return ErrFmt("unsupported option '{}', try '--help'", *a);
 
-		if(args::check(args, args::HELP))
-		{
-			help::showBuildHelp();
-			return Ok();
-		}
-
 		auto timer = util::Timer();
 
 		vvn::log("running full build");
@@ -87,12 +81,12 @@ namespace vvn
 		{
 			auto _ = LogIndenter();
 
-			result = Result<bool, std::string>(Ok(true)).flatmap([&](bool) {
+			result = result.flatmap([&](bool) {
 				return this->synthesise(vivado, args);
-			}).flatmap([&](bool did_run) {
-				return this->implement(vivado, args, did_run);
-			}).flatmap([&](bool did_run) {
-				return this->writeBitstream(vivado, args, did_run);
+			}).flatmap([&](bool up_to_date) {
+				return this->implement(vivado, args, /* use_dcp: */ up_to_date);
+			}).flatmap([&](bool up_to_date) {
+				return this->writeBitstream(vivado, args, /* use_dcp: */ up_to_date);
 			});
 		}
 

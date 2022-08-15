@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <filesystem>
 
 #include <zpr.h>
 
@@ -19,6 +20,8 @@ namespace vvn
 
 		int min_ip_severity = 0;
 		bool print_message_ids = false;
+
+		std::filesystem::path project_path;
 
 		util::hashmap<std::string, int> severity_overrides;
 		util::hashset<std::string> suppressions;

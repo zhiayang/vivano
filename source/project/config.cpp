@@ -44,6 +44,10 @@ namespace defaults
 		{ "Route 35-14", vvn::Message::ERROR },     // multi-driver net
 		{ "AVAL-46", vvn::Message::ERROR },         // MMCM or PPL VCO freq out of range
 		{ "IP_Flow 19-3664", vvn::Message::ERROR }, // IP file not found
+		{ "HDL 9-1314", vvn::Message::ERROR },      // formal port/generic not declared
+		{ "HDL 9-3136", vvn::Message::ERROR },      // undeclared variable
+		{ "HDL 9-3242", vvn::Message::ERROR },      // invalid port map
+		{ "HDL 9-3500", vvn::Message::ERROR },      // formal port has no value
 
 		{ "Physopt 32-619", vvn::Message::LOG },    // estimated timing summary
       	{ "Route 35-57", vvn::Message::LOG }        // estimated timing summary
@@ -202,6 +206,12 @@ namespace vvn
 				if(foo.is_err())
 					return Err(foo.error());
 				sources.impl_only_xdcs = foo.unwrap();
+			}
+			{
+				auto foo = read_string_array(obj, "tcls");
+				if(foo.is_err())
+					return Err(foo.error());
+				sources.tcl_scripts = foo.unwrap();
 			}
 		}
 

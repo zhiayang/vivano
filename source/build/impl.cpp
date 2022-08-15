@@ -38,16 +38,10 @@ namespace vvn
 			|| check_files(m_impl_constraints);
 	}
 
-	Result<bool, std::string> Project::implement(Vivado& vivado, std::span<std::string_view> args, bool from_prev) const
+	Result<bool, std::string> Project::implement(Vivado& vivado, std::span<std::string_view> args, bool use_dcp) const
 	{
 		if(auto a = args::checkValidArgs(args, { args::FORCE_BUILD, args::USE_STALE }); a.has_value())
 			return ErrFmt("unsupported option '{}', try '--help'", *a);
-
-		if(args::check(args, args::HELP))
-		{
-			help::showImplHelp();
-			return Ok(false);
-		}
 
 		auto allow_stale = args::check(args, args::USE_STALE);
 		auto force_build = args::check(args, args::FORCE_BUILD);
@@ -55,7 +49,7 @@ namespace vvn
 		if(not this->should_reimplement(vivado, allow_stale) && not force_build)
 		{
 			vvn::log("implementation up to date");
-			return Ok(false);
+			return Ok(true);
 		}
 
 		zpr::println("");
@@ -64,7 +58,7 @@ namespace vvn
 		auto timer = util::Timer();
 		auto _ = vvn::LogIndenter();
 
-		if(not from_prev)
+		if(use_dcp)
 		{
 			this->reload_project(vivado);
 
@@ -119,6 +113,6 @@ namespace vvn
 			return ErrFmt("failed to write post-implementation checkpoint");
 
 		vvn::log("implementation finished in {}", timer.print());
-		return Ok(true);
+		return Ok(false);
 	}
 }

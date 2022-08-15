@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <filesystem>
 
+#include "ip.h"
 #include "args.h"
 #include "help.h"
 #include "vivano.h"
@@ -17,88 +18,6 @@ namespace stdfs = std::filesystem;
 
 namespace vvn
 {
-	static bool should_regenerate_ip(const Project::IpInst& ip)
-	{
-		return (not stdfs::exists(ip.xci))
-			|| (stdfs::last_write_time(ip.tcl) > stdfs::last_write_time(ip.xci));
-	}
-
-	static bool should_rebuild_ip(const Project::IpInst& ip)
-	{
-		// if the IP is global, then we always rebuild it.
-		if(ip.is_global)
-			return true;
-
-		// all IPs are synthesised out of context. to see whether we need
-		// to re-synthesise the IP, check whether:
-		// (a) the TCL script is newer than either the XCI or the DCP
-		// (b) the XCI is newer than the DCP
-
-		auto dcp_file = ip.xci;
-		dcp_file.replace_extension(".dcp");
-
-		return should_regenerate_ip(ip)
-			|| (not stdfs::exists(dcp_file))
-			|| (stdfs::last_write_time(ip.xci) > stdfs::last_write_time(dcp_file));
-	}
-
-	static Result<void, std::string> regenerate_ip_instance(Vivado& vivado, const Project::IpInst& ip, const MsgConfig& msg_cfg)
-	{
-		auto _ = vvn::LogIndenter();
-		auto timer = util::Timer();
-		auto uwu = MsgConfigIpSevPusher(msg_cfg);
-
-		vvn::log("regenerating ip '{}'", ip.name);
-		if(not stdfs::exists(ip.xci.parent_path().parent_path()))
-			stdfs::create_directories(ip.xci.parent_path().parent_path());
-
-		if(stdfs::exists(ip.xci.parent_path()))
-			stdfs::remove_all(ip.xci.parent_path());
-
-		auto a = vivado.streamCommand("source {}", ip.tcl.string());
-		if(a.has_errors())
-			return ErrFmt("failed to run '{}'", ip.tcl.string());
-
-		auto __ = vvn::LogIndenter();
-		vvn::log("finished in {}; suppressed {} info(s), {} warning(s)", timer.print(),
-			a.infos.size(), a.warnings.size());
-
-		return Ok();
-	}
-
-	static Result<void, std::string> synthesise_ip_instance(Vivado& vivado, const Project::IpInst& ip, const MsgConfig& msg_cfg)
-	{
-		auto _ = vvn::LogIndenter();
-		auto timer = util::Timer();
-		auto uwu = MsgConfigIpSevPusher(msg_cfg);
-
-		auto a = vivado.streamCommand("set_property GENERATE_SYNTH_CHECKPOINT {} [get_files {}]",
-			ip.is_global ? "false" : "true", ip.xci.filename().string());
-
-		if(a.has_errors())
-			return ErrFmt("failed to set '{}' as {}", ip.name, ip.is_global ? "global" : "out-of-context");
-
-		if(ip.is_global)
-		{
-			if(vivado.streamCommand("generate_target all [get_ips {}]", ip.name).has_errors())
-				return ErrFmt("failed to generate targets for '{}'", ip.name);
-		}
-		else
-		{
-			vvn::log("rebuilding ip '{}'", ip.name);
-			auto b = vivado.streamCommand("synth_ip [get_ips {}]", ip.name);
-			if(b.has_errors())
-				return ErrFmt("synthesis of '{}' failed", ip.name);
-
-			auto __ = vvn::LogIndenter();
-			vvn::log("finished in {}; suppressed {} info(s), {} warning(s)", timer.print(),
-				b.infos.size(), b.warnings.size());
-		}
-
-		return Ok();
-	}
-
-
 	bool Project::should_resynthesise(Vivado& vivado) const
 	{
 		(void) vivado;
@@ -118,7 +37,7 @@ namespace vvn
 		};
 
 		auto rebuild_ips = std::any_of(m_ip_instances.begin(), m_ip_instances.end(), [](auto& ip) {
-			return should_regenerate_ip(ip) || should_rebuild_ip(ip);
+			return ip.shouldRegenerate() || ip.shouldResynthesise();
 		});
 
 		return rebuild_ips
@@ -134,17 +53,11 @@ namespace vvn
 		if(auto a = args::checkValidArgs(args, { args::FORCE_BUILD }); a.has_value())
 			return ErrFmt("unsupported option '{}', try '--help'", *a);
 
-		if(args::check(args, args::HELP))
-		{
-			help::showSynthHelp();
-			return Ok(false);
-		}
-
 		auto force_build = args::check(args, args::FORCE_BUILD);
 		if(not this->should_resynthesise(vivado) && not force_build)
 		{
 			vvn::log("synthesis up to date");
-			return Ok(false);
+			return Ok(true);
 		}
 
 		zpr::println("");
@@ -174,39 +87,8 @@ namespace vvn
 		}
 
 		vvn::log("loading ips");
-		// sort them because i have nothing better to do
-		auto ip_insts = std::vector(m_ip_instances.begin(), m_ip_instances.end());
-		std::sort(ip_insts.begin(), ip_insts.end(), [](const auto& a, const auto& b) -> bool {
-			if(a.is_global == b.is_global)
-				return a.name < b.name;
-
-			return b.is_global;
-		});
-
-		for(auto& ip : ip_insts)
-		{
-			auto _ = vvn::LogIndenter();
-			zpr::println("{}+ {}{}", vvn::indentStr(), ip.is_global ? "(global) " : "", ip.name);
-
-			if(should_regenerate_ip(ip))
-			{
-				if(auto e = regenerate_ip_instance(vivado, ip, m_msg_config); e.is_err())
-					return Err(e.error());
-			}
-			else
-			{
-				// if we had to regenerate the IP, then `create_ip` already puts it in
-				// the current project, so there's no need to re-read it (in fact, we can't)
-				if(vivado.streamCommand("read_ip \"{}\"", ip.xci.string()).has_errors())
-					return ErrFmt("failed to read ip '{}'", ip.name);
-			}
-
-			if(should_rebuild_ip(ip))
-			{
-				if(auto e = synthesise_ip_instance(vivado, ip, m_msg_config); e.is_err())
-					return Err(e.error());
-			}
-		}
+		if(auto e = ip::synthesiseIpProducts(vivado, *this); e.is_err())
+			return Err(e.error());
 
 		// synthesise
 		vvn::log("running synth_design");
@@ -219,6 +101,6 @@ namespace vvn
 			return ErrFmt("failed to write post-synthesis checkpoint");
 
 		vvn::log("synthesis finished in {}", timer.print());
-		return Ok(true);
+		return Ok(false);
 	}
 }

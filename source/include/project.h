@@ -59,6 +59,8 @@ namespace vvn
 
 			bool auto_find_sources;
 
+			std::vector<std::string> tcl_scripts;
+
 		} sources_config;
 
 		struct {
@@ -81,6 +83,17 @@ namespace vvn
 
 	struct Vivado;
 
+	struct IpInstance
+	{
+		std::string name;
+		stdfs::path tcl;
+		stdfs::path xci;
+		bool is_global = false;
+
+		bool shouldRegenerate() const;
+		bool shouldResynthesise() const;
+	};
+
 	struct Project
 	{
 		Project(const ProjectConfig& config);
@@ -89,42 +102,37 @@ namespace vvn
 
 		zst::Result<void, std::string> setup(Vivado& vivado) const;
 		zst::Result<void, std::string> clean(std::span<std::string_view> args) const;
+		zst::Result<void, std::string> check(Vivado& vivado, std::span<std::string_view>) const;
 		zst::Result<void, std::string> buildAll(Vivado& vivado, std::span<std::string_view> args) const;
-		// zst::Result<void, std::string> elaborate(Vivado& vivado) const;
 
 		zst::Result<bool, std::string> synthesise(Vivado& vivado, std::span<std::string_view> args) const;
 
 		auto implement(Vivado& vivado, std::span<std::string_view> args) const
 		{
-			return this->implement(vivado, std::move(args), /* use_prev: */ false);
+			return this->implement(vivado, std::move(args), /* use_dcp: */ true);
 		}
 
 		auto writeBitstream(Vivado& vivado, std::span<std::string_view> args) const
 		{
-			return this->writeBitstream(vivado, std::move(args), /* use_prev: */ false);
+			return this->writeBitstream(vivado, std::move(args), /* use_dcp: */ true);
 		}
-
-		struct IpInst
-		{
-			std::string name;
-			stdfs::path tcl;
-			stdfs::path xci;
-			bool is_global = false;
-		};
 
 		const MsgConfig& getMsgConfig() const { return m_msg_config; }
 
 		const std::string& getPartName() const { return m_part_name; }
 		const std::string& getProjectName() const { return m_project_name; }
 
-		stdfs::path getProjectLocation() const { return m_location; }
 		stdfs::path getIpLocation() const { return m_ip_folder; }
-		stdfs::path getIpOutputsLocation() const { return m_xci_folder; }
 		stdfs::path getBuildFolder() const { return m_build_folder; }
+		stdfs::path getProjectLocation() const { return m_location; }
+		stdfs::path getIpOutputsLocation() const { return m_xci_folder; }
+
+		const IpInstance* getIpWithName(std::string_view name) const;
+		const std::vector<IpInstance>& getIpInstances() const { return m_ip_instances; }
 
 	private:
-		zst::Result<bool, std::string> implement(Vivado& vivado, std::span<std::string_view> args, bool use_prev) const;
-		zst::Result<bool, std::string> writeBitstream(Vivado& vivado, std::span<std::string_view> args, bool use_prev) const;
+		zst::Result<bool, std::string> implement(Vivado& vivado, std::span<std::string_view> args, bool use_dcp) const;
+		zst::Result<bool, std::string> writeBitstream(Vivado& vivado, std::span<std::string_view> args, bool use_dcp) const;
 
 		zst::Result<void, std::string> reload_project(Vivado& vivado) const;
 		zst::Result<void, std::string> read_files(Vivado& vivado) const;
@@ -145,6 +153,8 @@ namespace vvn
 		stdfs::path m_xci_folder;
 		stdfs::path m_vivado_dir;
 
+		std::vector<stdfs::path> m_tcl_scripts;
+
 		std::string m_synthesised_dcp_name;
 		std::string m_implemented_dcp_name;
 
@@ -162,7 +172,7 @@ namespace vvn
 		std::vector<std::string> m_synth_constraints;
 		std::vector<std::string> m_impl_constraints;
 
-		std::vector<IpInst> m_ip_instances;
+		std::vector<IpInstance> m_ip_instances;
 	};
 
 }

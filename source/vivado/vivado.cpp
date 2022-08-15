@@ -23,7 +23,7 @@ namespace vvn
 	static zpp::Process spawn_vivado(stdfs::path vivado_path, stdfs::path working_dir, std::vector<std::string> args)
 	{
 		if(args.empty())
-			args = { "-mode", "tcl", "-notrace", "-nolog", "-nojournal" };
+			args = { "-mode", "tcl", "-notrace", "-nolog",  "-nojournal" };
 
 		std::string vivado {};
 		if(vivado_path.empty())
@@ -50,6 +50,7 @@ namespace vvn
 	{
 		auto cwd = working_dir.has_value() ? *working_dir : stdfs::current_path();
 
+		m_working_dir = cwd;
 		m_process.terminate();
 		m_process = spawn_vivado(m_vivado_path, cwd, args);
 	}
@@ -64,16 +65,18 @@ namespace vvn
 		return m_parts_list.find(part) != m_parts_list.end();
 	}
 
-	void Vivado::close()
+	void Vivado::close(bool quiet)
 	{
 		if(not m_process.isAlive())
 			return;
 
-		vvn::log("waiting for vivado to close");
+		if(not quiet)
+			vvn::log("waiting for vivado to close");
+
 		m_process.sendLine("exit");
 
 		using namespace std::chrono_literals;
-		constexpr auto EXIT_TIMEOUT = 5s;
+		constexpr auto EXIT_TIMEOUT = 3s;
 
 		auto start = std::chrono::steady_clock::now();
 		while(m_process.isAlive())
@@ -108,6 +111,8 @@ namespace vvn
 	Vivado::Vivado(stdfs::path vivado_path, const MsgConfig& msg_config, stdfs::path working_dir)
 		: m_msg_config(&msg_config), m_process(spawn_vivado(std::move(vivado_path), std::move(working_dir), {}))
 	{
+		m_working_dir = working_dir;
+
 		using namespace std::chrono_literals;
 		vvn::log("starting vivado...");
 		auto timer = util::Timer();

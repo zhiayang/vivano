@@ -4,6 +4,7 @@
 
 #include <filesystem>
 
+#include "ip.h"
 #include "args.h"
 #include "help.h"
 #include "vivano.h"
@@ -19,12 +20,6 @@ namespace vvn
 	{
 		if(auto a = args::checkValidArgs(args, { args::ALL, args::IPS }); a.has_value())
 			return ErrFmt("invalid clean flag '{}', try '--help'", *a);
-
-		if(args::check(args, args::HELP))
-		{
-			help::showCleanHelp();
-			return Ok();
-		}
 
 		bool clean_dcps = false;
 		bool clean_ips = false;
@@ -67,13 +62,7 @@ namespace vvn
 		{
 			vvn::log("cleaning IP products");
 			for(auto& ip : m_ip_instances)
-			{
-				if(stdfs::exists(ip.xci.parent_path()))
-				{
-					zpr::println("{}- {}", indentStr(1), stdfs::relative(ip.xci.parent_path(), m_location).string());
-					stdfs::remove_all(ip.xci.parent_path());
-				}
-			}
+				ip::cleanIpProducts(*this, ip.name);
 
 			// yeet the cache
 			if(auto cache = m_location / ".cache"; stdfs::exists(cache) && stdfs::is_directory(cache))

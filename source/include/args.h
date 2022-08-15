@@ -33,9 +33,17 @@ namespace vvn
 	static constexpr std::string_view CMD_VERSION       = "version";
 	static constexpr std::string_view CMD_INIT          = "init";
 	static constexpr std::string_view CMD_CLEAN         = "clean";
+	static constexpr std::string_view CMD_CHECK         = "check";
 	static constexpr std::string_view CMD_BUILD         = "build";
 	static constexpr std::string_view CMD_SYNTH         = "synth";
 	static constexpr std::string_view CMD_IMPL          = "impl";
 	static constexpr std::string_view CMD_BITSREAM      = "bitstream";
-	static constexpr std::string_view CMD_CREATE_IP     = "create-ip";
+
+	static constexpr std::string_view CMD_IP            = "ip";
+	static constexpr std::string_view CMD_IP_EDIT       = "edit";
+	static constexpr std::string_view CMD_IP_LIST       = "list";
+	static constexpr std::string_view CMD_IP_BUILD      = "build";
+	static constexpr std::string_view CMD_IP_CLEAN      = "clean";
+	static constexpr std::string_view CMD_IP_CREATE     = "create";
+	static constexpr std::string_view CMD_IP_DELETE     = "delete";
 }

@@ -10,8 +10,8 @@ namespace vvn::help
 	void showCommandList();
 
 	void showCleanHelp();
-	void showCreateIpHelp();
 	void showInitHelp();
+	void showCheckHelp();
 	void showBuildHelp();
 	void showSynthHelp();
 	void showImplHelp();

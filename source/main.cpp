@@ -13,6 +13,7 @@
 #include <zprocpipe.h>
 
 #include "args.h"
+#include "ip.h"
 #include "util.h"
 #include "help.h"
 #include "vivano.h"
@@ -27,17 +28,21 @@ static Result<void, std::string> run_subcommand(vvn::Project& project, std::stri
 	using namespace vvn;
 	if(command == vvn::CMD_CLEAN)
 	{
-		if(args::check(args, args::HELP))
-			help::showCleanHelp(), exit(0);
-
 		return project.clean(args);
 	}
-	else if(command == vvn::CMD_CREATE_IP)
+	else if(command == vvn::CMD_IP)
+	{
+		return vvn::ip::runIpCommand(project, args);
+	}
+	else if(command == vvn::CMD_CHECK)
 	{
 		if(args::check(args, args::HELP))
-			help::showCreateIpHelp(), exit(0);
+			help::showCheckHelp(), exit(0);
 
-		return vvn::createIpWithVivadoGUI(project, args);
+		auto vivado = project.launchVivado();
+		return project.setup(vivado).flatmap([&]() {
+			return project.check(vivado, args);
+		});
 	}
 	else if(command == vvn::CMD_BUILD)
 	{
@@ -137,7 +142,7 @@ int main(int argc, char** argv)
 	auto result = run_subcommand(project, command, args);
 
 	if(result.is_err())
-		zpr::fprintln(stderr, "\nerrors were encountered: {}", result.error());
+		vvn::error("{}\n", result.error());
 
 	exit(result.is_err() ? 1 : 0);
 }

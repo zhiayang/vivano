@@ -998,6 +998,9 @@ namespace zst
 		int state = 0;
 		E err;
 	};
+
+	template <typename E>
+	using Failable = Result<void, E>;
 }
 
 
@@ -1105,7 +1108,7 @@ namespace zst::impl
 	- fix wrong placement of const in `map` and `flatmap`
 	- add `add_value` function to Result<void>
 	- add `remove_value` function to Result<T>
-
+	- add Failable type alias
 
 
 	1.4.1 - 10/08/2022

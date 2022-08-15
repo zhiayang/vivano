@@ -36,11 +36,6 @@ namespace util
 				ret.push_back(std::string_view(s.c_str() + word_start, i - word_start));
 				word_start = i + 1;
 			}
-			else if(s[i] == '-')
-			{
-				ret.push_back(std::string_view(s.c_str() + word_start, i - word_start + 1));
-				word_start = i + 1;
-			}
 		}
 
 		ret.push_back(std::string_view(s.c_str() + word_start));
@@ -137,7 +132,7 @@ namespace util
 				else
 				{
 					// split it.
-					ss << word.substr(0, thisline) << "-" << "\n";
+					ss << word.substr(0, thisline) /* << "-" */ << "\n";
 					ss << leftMargin << word.substr(thisline) << " ";
 				}
 
