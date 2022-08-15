@@ -12,8 +12,9 @@
 #include <zpr.h>
 #include <zprocpipe.h>
 
-#include "args.h"
 #include "ip.h"
+#include "bd.h"
+#include "args.h"
 #include "util.h"
 #include "help.h"
 #include "vivano.h"
@@ -33,6 +34,10 @@ static Result<void, std::string> run_subcommand(vvn::Project& project, std::stri
 	else if(command == vvn::CMD_IP)
 	{
 		return vvn::ip::runIpCommand(project, args);
+	}
+	else if(command == vvn::CMD_BD)
+	{
+		return vvn::bd::runBdCommand(project, args);
 	}
 	else if(command == vvn::CMD_CHECK)
 	{

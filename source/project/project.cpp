@@ -29,14 +29,33 @@ namespace vvn
 		return m_build_folder / zpr::sprint("{}.bit", m_project_name);
 	}
 
-	Vivado Project::launchVivado() const
+	Vivado Project::launchVivado(bool source_scripts) const
 	{
 		auto vivado = Vivado(m_vivado_dir, m_msg_config, m_location);
-		for(auto& tcl : m_tcl_scripts)
+		if(source_scripts)
 		{
-			auto tmp = stdfs::relative(tcl, m_location);
-			if(vivado.streamCommand("source \"{}\"", tmp.string()).has_errors())
-				vvn::error("failed to source tcl script '{}'", tmp.string());
+			for(auto& tcl : m_tcl_scripts)
+			{
+				auto tmp = stdfs::relative(tcl, m_location);
+				if(vivado.streamCommand("source \"{}\"", tmp.string()).has_errors())
+					vvn::error("failed to source tcl script '{}'", tmp.string());
+			}
+		}
+		return vivado;
+	}
+
+	Vivado Project::launchVivado(const std::vector<std::string>& args, stdfs::path working_dir,
+		bool source_scripts, bool run_init) const
+	{
+		auto vivado = Vivado(m_vivado_dir, m_msg_config, args, working_dir, run_init);
+		if(source_scripts)
+		{
+			for(auto& tcl : m_tcl_scripts)
+			{
+				auto tmp = stdfs::relative(tcl, m_location);
+				if(vivado.streamCommand("source \"{}\"", tmp.string()).has_errors())
+					vvn::error("failed to source tcl script '{}'", tmp.string());
+			}
 		}
 		return vivado;
 	}
@@ -51,8 +70,12 @@ namespace vvn
 
 		m_location = config.location;
 		m_build_folder = config.build_folder;
+
 		m_ip_folder = config.ip_config.location;
-		m_xci_folder = config.ip_config.location / config.ip_config.xci_subdir;
+		m_xci_folder = m_ip_folder / config.ip_config.xci_subdir;
+
+		m_bd_folder = config.bd_config.location;
+		m_bd_output_folder = m_bd_folder / config.bd_config.bd_subdir;
 
 		m_msg_config = config.messages_config;
 		m_msg_config.project_path = m_location;
@@ -120,14 +143,12 @@ namespace vvn
 		// ip
 		if(config.ip_config.auto_find_sources)
 		{
-			for(auto& tcl : util::find_files_ext(m_location / config.ip_config.location, ".tcl"))
+			for(auto& tcl : util::find_files_ext(m_ip_folder, ".tcl"))
 			{
 				IpInstance inst {};
 				inst.tcl = tcl;
 				inst.name = tcl.stem().string();
-				inst.xci = m_location
-					/ config.ip_config.location
-					/ config.ip_config.xci_subdir
+				inst.xci = m_xci_folder
 					/ inst.name
 					/ stdfs::path(inst.name).replace_extension(".xci");
 
@@ -147,6 +168,27 @@ namespace vvn
 		{
 			vvn::error_and_exit("unsupported");
 		}
+
+		// bd
+		if(config.bd_config.auto_find_sources)
+		{
+			for(auto& tcl : util::find_files_ext(m_bd_folder, ".tcl"))
+			{
+				BdInstance inst {};
+				inst.tcl = tcl;
+				inst.name = tcl.stem().string();
+				inst.bd = m_bd_output_folder
+					/ inst.name
+					/ stdfs::path(inst.name).replace_extension(".bd");
+
+				m_bd_instances.push_back(std::move(inst));
+			}
+
+		}
+		else
+		{
+			vvn::error_and_exit("unsupported");
+		}
 	}
 
 	const IpInstance* Project::getIpWithName(std::string_view name) const
@@ -155,6 +197,16 @@ namespace vvn
 		{
 			if(ip.name == name)
 				return &ip;
+		}
+		return nullptr;
+	}
+
+	const BdInstance* Project::getBdWithName(std::string_view name) const
+	{
+		for(auto& bd : m_bd_instances)
+		{
+			if(bd.name == name)
+				return &bd;
 		}
 		return nullptr;
 	}

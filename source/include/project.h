@@ -73,6 +73,13 @@ namespace vvn
 
 		} ip_config;
 
+		struct {
+			stdfs::path location;
+			std::string bd_subdir;
+			bool auto_find_sources;
+
+		} bd_config;
+
 		MsgConfig messages_config;
 	};
 
@@ -94,11 +101,23 @@ namespace vvn
 		bool shouldResynthesise() const;
 	};
 
+	struct BdInstance
+	{
+		std::string name;
+		stdfs::path tcl;
+		stdfs::path bd;
+
+		bool shouldRegenerate() const;
+		bool shouldResynthesise() const;
+	};
+
 	struct Project
 	{
 		Project(const ProjectConfig& config);
 
-		Vivado launchVivado() const;
+		Vivado launchVivado(bool source_scripts = true) const;
+		Vivado launchVivado(const std::vector<std::string>& args, stdfs::path working_dir,
+			bool source_scripts, bool run_init) const;
 
 		zst::Result<void, std::string> setup(Vivado& vivado) const;
 		zst::Result<void, std::string> clean(std::span<std::string_view> args) const;
@@ -122,13 +141,20 @@ namespace vvn
 		const std::string& getPartName() const { return m_part_name; }
 		const std::string& getProjectName() const { return m_project_name; }
 
-		stdfs::path getIpLocation() const { return m_ip_folder; }
 		stdfs::path getBuildFolder() const { return m_build_folder; }
 		stdfs::path getProjectLocation() const { return m_location; }
+
+		stdfs::path getIpLocation() const { return m_ip_folder; }
 		stdfs::path getIpOutputsLocation() const { return m_xci_folder; }
+
+		stdfs::path getBdLocation() const { return m_bd_folder; }
+		stdfs::path getBdOutputsLocation() const { return m_bd_output_folder; }
 
 		const IpInstance* getIpWithName(std::string_view name) const;
 		const std::vector<IpInstance>& getIpInstances() const { return m_ip_instances; }
+
+		const BdInstance* getBdWithName(std::string_view name) const;
+		const std::vector<BdInstance>& getBdInstances() const { return m_bd_instances; }
 
 	private:
 		zst::Result<bool, std::string> implement(Vivado& vivado, std::span<std::string_view> args, bool use_dcp) const;
@@ -149,9 +175,14 @@ namespace vvn
 
 		stdfs::path m_location;
 		stdfs::path m_build_folder;
+
+		stdfs::path m_vivado_dir;
+
 		stdfs::path m_ip_folder;
 		stdfs::path m_xci_folder;
-		stdfs::path m_vivado_dir;
+
+		stdfs::path m_bd_folder;
+		stdfs::path m_bd_output_folder;
 
 		std::vector<stdfs::path> m_tcl_scripts;
 
@@ -173,6 +204,7 @@ namespace vvn
 		std::vector<std::string> m_impl_constraints;
 
 		std::vector<IpInstance> m_ip_instances;
+		std::vector<BdInstance> m_bd_instances;
 	};
 
 }

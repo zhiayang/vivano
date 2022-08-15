@@ -106,12 +106,25 @@ namespace vvn
 		m_process.terminateAll();
 	}
 
-	Vivado::Vivado(stdfs::path vivado_path, const MsgConfig& msg_config) : Vivado(vivado_path, msg_config, stdfs::current_path()) {}
+
+
+	Vivado::Vivado(stdfs::path vivado_path, const MsgConfig& msg_config)
+		: Vivado(std::move(vivado_path), msg_config, {}, stdfs::current_path(), /* run_init: */ true)
+	{
+	}
 
 	Vivado::Vivado(stdfs::path vivado_path, const MsgConfig& msg_config, stdfs::path working_dir)
-		: m_msg_config(&msg_config), m_process(spawn_vivado(std::move(vivado_path), std::move(working_dir), {}))
+		: Vivado(std::move(vivado_path), msg_config, {}, std::move(working_dir), /* run_init: */ true)
+	{
+	}
+
+	Vivado::Vivado(stdfs::path vivado_path, const MsgConfig& msg_config, const std::vector<std::string>& args,
+		stdfs::path working_dir, bool run_init)
+			: m_msg_config(&msg_config), m_process(spawn_vivado(vivado_path, working_dir, args))
 	{
 		m_working_dir = working_dir;
+		if(not run_init)
+			return;
 
 		using namespace std::chrono_literals;
 		vvn::log("starting vivado...");

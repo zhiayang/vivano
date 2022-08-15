@@ -65,15 +65,6 @@ namespace vvn::ip
 						customise_ip_cmd = std::string(*it);
 						state = 1;
 					}
-
-				#if 0
-					if(it->starts_with("generate_target"))
-						flag = true;
-					else if(flag && it->starts_with("create_ip"))
-						create_xci_cmd = std::string(*it);
-					else if(flag && it->starts_with("set_property"))
-						customise_ip_cmd = std::string(*it);
-				#endif
 				}
 
 				return (state == 2);

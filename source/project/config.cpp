@@ -31,6 +31,9 @@ namespace defaults
 	constexpr std::string_view IP_LOCATION      = "ip";
 	constexpr std::string_view XCI_SUBDIR       = "xci";
 
+	constexpr std::string_view BD_LOCATION      = "bd";
+	constexpr std::string_view BD_SUBDIR        = "bd";
+
 	constexpr std::string_view SYNTHESISED_DCP  = "synthesised.dcp";
 	constexpr std::string_view IMPLEMENTED_DCP  = "implemented.dcp";
 
@@ -86,7 +89,7 @@ namespace vvn
 			return Ok(std::string(default_value));
 	}
 
-/*
+#if 0
 	static Result<int64_t, std::string> read_int(const pj::object& dict, const std::string& key,
 		int64_t default_value)
 	{
@@ -102,7 +105,7 @@ namespace vvn
 			return Ok(default_value);
 		}
 	}
-*/
+#endif
 
 	static Result<bool, std::string> read_boolean(const pj::object& dict, const std::string& key,
 		bool default_value)
@@ -261,6 +264,45 @@ namespace vvn
 
 		return Ok();
 	}
+
+	static Result<void, std::string> parseBdJson(ProjectConfig& project, const pj::object& dict)
+	{
+		auto& bd = project.bd_config;
+		if(auto foo = dict.find("bd"); foo == dict.end())
+		{
+			bd.location = project.location / defaults::BD_LOCATION;
+			bd.bd_subdir = defaults::BD_SUBDIR;
+			bd.auto_find_sources = true;
+		}
+		else
+		{
+			auto& obj = foo->second.as_obj();
+			{
+				auto foo = read_string(obj, "location", defaults::BD_LOCATION);
+				if(foo.is_err())
+					return Err(foo.error());
+				bd.location = project.location / foo.unwrap();
+			}
+
+			{
+				auto foo = read_string(obj, "bd_subdir", defaults::BD_SUBDIR);
+				if(foo.is_err())
+					return Err(foo.error());
+				bd.bd_subdir = foo.unwrap();
+			}
+
+			{
+				auto foo = read_boolean(obj, "auto_find_sources", true);
+				if(foo.is_err())
+					return Err(foo.error());
+				bd.auto_find_sources = foo.unwrap();
+			}
+		}
+
+		return Ok();
+	}
+
+
 
 	static Result<void, std::string> parseMessagesJson(ProjectConfig& project, const pj::object& dict)
 	{
@@ -464,6 +506,9 @@ namespace vvn
 			return Err(x.error());
 
 		if(auto x = parseIpJson(proj, json_top); x.is_err())
+			return Err(x.error());
+
+		if(auto x = parseBdJson(proj, json_top); x.is_err())
 			return Err(x.error());
 
 		if(auto x = parseMessagesJson(proj, json_top); x.is_err())

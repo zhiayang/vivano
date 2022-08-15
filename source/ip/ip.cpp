@@ -32,12 +32,13 @@ Subcommands:
     build           build out-of-context products for IPs
     create          create a new IP customisation
     delete          delete an IP instance
+    clean           clean IP output products
     edit            edit an existing IP instance
     list            list IP instances in the project
 
-These commands launch the Vivado GUI; create or customise the
-IP using the IP customisation dialog. Viavdo will automatically
-close when the IP operation is completed.
+Creating and editing an IP instance will launch the Vivado GUI; create an IP
+using the IP catalog, or edit an existing one using the sources list on the
+left. Viavdo will automatically close when the IP operation is completed.
 )";
 
 		auto print_ip_list = [](const Project& proj) -> auto {
@@ -58,6 +59,11 @@ close when the IP operation is completed.
 		{
 			puts(help_str);
 			return Ok();
+		}
+		else if(args[0] == CMD_IP_LIST)
+		{
+			puts("list of ips:");
+			return print_ip_list(proj);
 		}
 		else if(args[0] == CMD_IP_CREATE)
 		{
@@ -148,11 +154,6 @@ The name of an existing IP is required, which is one of:)");
 
 			return ip::cleanIpProducts(proj, args[1]);
 		}
-		else if(args[0] == CMD_IP_LIST)
-		{
-			puts("list of ips:");
-			return print_ip_list(proj);
-		}
 		else
 		{
 			puts(help_str);
@@ -177,19 +178,19 @@ The name of an existing IP is required, which is one of:)");
 				stdfs::remove_all(fake_proj);
 		});
 
-		auto vivado = proj.launchVivado();
 		auto journal_name = "xx-vivado-journal.jou";
 
 		// use project flow so we can put it in its own folder, and yeet the whole thing at once
 		{
 			// make it 3 deep...
 			stdfs::create_directory(fake_proj);
-			auto foo = zpr::sprint("create_project {} -force -part {} {} {}/{}", ip_project ? "-ip" : "",
-				proj.getPartName(), fake_proj, fake_proj, fake_proj);
+			auto vivado = proj.launchVivado({}, fake_proj, /* source_scripts: */ false, /* run_init: */ true);
+			auto foo = zpr::sprint("create_project {} -force -part {} {} {}", ip_project ? "-ip" : "",
+				proj.getPartName(), fake_proj, fake_proj);
 
 			if(vivado.streamCommand(foo.c_str()).has_errors())
 				return ErrFmt("error creating temporary project");
-
+#if 0
 			// run the setup in a fresh instance of vivado in the fake directory
 			vivado.close(/* quiet: */ true);
 
@@ -199,27 +200,28 @@ The name of an existing IP is required, which is one of:)");
 				"-nolog", "-nojournal",
 				zpr::sprint("{}/{}.xpr", fake_proj, fake_proj)
 			}, stdfs::path(fake_proj));
+#endif
 
+			vvn::log("running pre-setup");
 			if(auto e = run_setup(vivado); e.is_err())
 				return Err(e.error());
-
-			// close it again
-			vivado.close(/* quiet: */ true);
 
 			// touch the file
 			fclose(fopen((stdfs::path(fake_proj) / journal_name).c_str(), "wb"));
 
-			// open it again
-			vvn::log("starting gui");
-			vivado.relaunchWithArgs({
-				"-mode", "gui",
-				"-nolog", "-appjournal",
-				"-journal", journal_name,
-				zpr::sprint("{}/{}.xpr", fake_proj, fake_proj)
-			}, stdfs::path(fake_proj));
+			// close it again
+			vivado.close(/* quiet: */ true);
 		}
 
-		auto pbar = util::ProgressBar(static_cast<size_t>(2 * (1 + getLogIndent())), 30);
+		// open it again
+		vvn::log("starting gui");
+
+		auto vivado = proj.launchVivado({
+			"-mode", "gui",
+			"-nolog", "-appjournal",
+			"-journal", journal_name,
+			zpr::sprint("{}/{}.xpr", fake_proj, fake_proj)
+		}, stdfs::path(fake_proj), /* source_scripts: */ false, /* run_init: */ false);
 
 		std::string cmds {};
 		std::vector<std::string_view> lines {};
@@ -236,6 +238,9 @@ The name of an existing IP is required, which is one of:)");
 		});
 
 		vvn::log("waiting for user action");
+		auto pbar = util::ProgressBar(static_cast<size_t>(2 * (1 + getLogIndent())), 30);
+		pbar.draw();
+
 
 		while(true)
 		{

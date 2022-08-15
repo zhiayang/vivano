@@ -70,6 +70,8 @@ namespace vvn
 		~Vivado();
 		Vivado(stdfs::path vivado_path, const MsgConfig& msg_config);
 		Vivado(stdfs::path vivado_path, const MsgConfig& msg_config, stdfs::path working_dir);
+		Vivado(stdfs::path vivado_path, const MsgConfig& msg_config, const std::vector<std::string>& args,
+			stdfs::path working_dir, bool run_init);
 
 		Vivado(Vivado&&) = default;
 		Vivado& operator= (Vivado&&) = default;
