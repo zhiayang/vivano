@@ -73,6 +73,19 @@ Vivado will automatically exit.
 
 			return bd::createUsingGui(proj, args[1]);
 		}
+		else if(args[0] == CMD_BD_DELETE)
+		{
+			if(args.size() != 2 || args::check(args, args::HELP))
+			{
+				zpr::println(R"(
+usage: vvn bd delete <bd name>
+
+The name of an existing block design is required, which is one of:)");
+				return print_bd_list(proj);
+			}
+
+			return bd::deleteBlockDesign(proj, args[1]);
+		}
 		else
 		{
 			puts(help_str);

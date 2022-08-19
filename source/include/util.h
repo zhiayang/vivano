@@ -85,6 +85,7 @@ namespace util
 
 	std::string readEntireFile(std::string_view path);
 	std::vector<std::string_view> splitString(std::string_view str, char delim);
+	std::string_view trim(std::string_view sv);
 
 	std::vector<stdfs::path> find_files_ext(const stdfs::path& dir, std::string_view ext);
 	std::vector<stdfs::path> find_files_ext_recursively(const stdfs::path& dir, std::string_view ext);

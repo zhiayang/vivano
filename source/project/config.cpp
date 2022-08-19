@@ -29,10 +29,10 @@ namespace defaults
 	constexpr std::string_view XDC_SUBDIR       = "constraints";
 
 	constexpr std::string_view IP_LOCATION      = "ip";
-	constexpr std::string_view XCI_SUBDIR       = "xci";
+	constexpr std::string_view IP_OUTPUT_SUBDIR = "outputs";
 
 	constexpr std::string_view BD_LOCATION      = "bd";
-	constexpr std::string_view BD_SUBDIR        = "bd";
+	constexpr std::string_view BD_OUTPUT_SUBDIR = "outputs";
 
 	constexpr std::string_view SYNTHESISED_DCP  = "synthesised.dcp";
 	constexpr std::string_view IMPLEMENTED_DCP  = "implemented.dcp";
@@ -228,7 +228,7 @@ namespace vvn
 		{
 			ip.location = project.location / defaults::IP_LOCATION;
 			ip.auto_find_sources = true;
-			ip.xci_subdir = defaults::XCI_SUBDIR;
+			ip.output_subdir = defaults::IP_OUTPUT_SUBDIR;
 		}
 		else
 		{
@@ -241,10 +241,10 @@ namespace vvn
 			}
 
 			{
-				auto foo = read_string(obj, "xci_subdir", defaults::XCI_SUBDIR);
+				auto foo = read_string(obj, "output_subdir", defaults::IP_OUTPUT_SUBDIR);
 				if(foo.is_err())
 					return Err(foo.error());
-				ip.xci_subdir = foo.unwrap();
+				ip.output_subdir = foo.unwrap();
 			}
 
 			{
@@ -271,7 +271,7 @@ namespace vvn
 		if(auto foo = dict.find("bd"); foo == dict.end())
 		{
 			bd.location = project.location / defaults::BD_LOCATION;
-			bd.bd_subdir = defaults::BD_SUBDIR;
+			bd.output_subdir = defaults::BD_OUTPUT_SUBDIR;
 			bd.auto_find_sources = true;
 		}
 		else
@@ -285,10 +285,10 @@ namespace vvn
 			}
 
 			{
-				auto foo = read_string(obj, "bd_subdir", defaults::BD_SUBDIR);
+				auto foo = read_string(obj, "output_subdir", defaults::BD_OUTPUT_SUBDIR);
 				if(foo.is_err())
 					return Err(foo.error());
-				bd.bd_subdir = foo.unwrap();
+				bd.output_subdir = foo.unwrap();
 			}
 
 			{
@@ -554,7 +554,13 @@ namespace vvn
 
 		json["ip"] = pj::value(pj::object {
 			{ "location", pj::value(defaults::IP_LOCATION) },
-			{ "xci_subdir", pj::value(defaults::XCI_SUBDIR) },
+			{ "output_subdir", pj::value(defaults::IP_OUTPUT_SUBDIR) },
+			{ "auto_find_sources", pj::value(true) }
+		});
+
+		json["bd"] = pj::value(pj::object {
+			{ "location", pj::value(defaults::BD_LOCATION) },
+			{ "output_subdir", pj::value(defaults::BD_OUTPUT_SUBDIR) },
 			{ "auto_find_sources", pj::value(true) }
 		});
 
@@ -578,6 +584,7 @@ namespace vvn
 		// while we're here, create the folders.
 		auto sources_path = stdfs::path(defaults::SOURCES_LOCATION);
 		auto ip_path = stdfs::path(defaults::IP_LOCATION);
+		auto bd_path = stdfs::path(defaults::BD_LOCATION);
 
 		if(auto x = stdfs::path(defaults::BUILD_LOCATION); not stdfs::exists(x))
 			stdfs::create_directories(x);
@@ -589,7 +596,9 @@ namespace vvn
 			stdfs::create_directories(x);
 		if(auto x = sources_path / defaults::SIM_SUBDIR; not stdfs::exists(x))
 			stdfs::create_directories(x);
-		if(auto x = ip_path / defaults::XCI_SUBDIR; not stdfs::exists(x))
+		if(auto x = ip_path / defaults::IP_OUTPUT_SUBDIR; not stdfs::exists(x))
+			stdfs::create_directories(x);
+		if(auto x = bd_path / defaults::BD_OUTPUT_SUBDIR; not stdfs::exists(x))
 			stdfs::create_directories(x);
 
 		auto f = fopen(PROJECT_JSON_FILENAME, "wb");

@@ -10,6 +10,7 @@
 #include <span>
 #include <string>
 #include <optional>
+#include <functional>
 #include <string_view>
 #include <unordered_set>
 
@@ -130,4 +131,17 @@ namespace vvn
 		CommandOutput run_command(const std::string& cmd);
 		CommandOutput stream_command(const std::string& cmd);
 	};
+
+	struct Project;
+
+	// this one starts a new vivado instance with a new project
+	zst::Failable<std::string> runGuiAndWaitForJournal(const Project& proj, bool ip_project,
+		std::function<zst::Failable<std::string> (Vivado&)> run_setup,
+		std::function<bool (std::span<std::string_view>)> callback);
+
+	// this one uses an existing vivado instance, and assumes that the gui is already open
+	// and vivado was launched with the correct journal option.
+	zst::Failable<std::string> waitForJournalOnGui(const Project& proj, Vivado& vivado,
+		stdfs::path journal, std::function<bool (std::span<std::string_view>)> callback);
+
 }

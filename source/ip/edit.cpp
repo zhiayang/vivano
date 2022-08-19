@@ -51,7 +51,7 @@ namespace vvn::ip
 		const auto& ip = *ip_ptr;
 		std::string new_property_cmd {};
 
-		auto e = run_gui_and_wait_for_journal(proj, /* ip_project: */ true, [&](auto& v) -> Failable<std::string> {
+		auto e = runGuiAndWaitForJournal(proj, /* ip_project: */ true, [&](auto& v) -> Failable<std::string> {
 			// experimentally, it's faster to source the tcl script and make a new instance
 			// rather than importing the xci file... lame
 			auto _ = MsgConfigIpSevPusher(proj.getMsgConfig());

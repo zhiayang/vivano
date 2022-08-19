@@ -37,6 +37,17 @@ namespace util
 		return ss.str();
 	}
 
+	std::string_view trim(std::string_view sv)
+	{
+		while(sv.size() > 0 && sv.find_first_of(" \t") == 0)
+			sv.remove_prefix(1);
+
+		while(sv.size() > 0 && sv.find_last_of(" \t") == sv.size() - 1)
+			sv.remove_suffix(1);
+
+		return sv;
+	}
+
 	std::vector<std::string_view> splitString(std::string_view str, char delim)
 	{
 		std::vector<std::string_view> ret {};

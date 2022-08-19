@@ -72,10 +72,10 @@ namespace vvn
 		m_build_folder = config.build_folder;
 
 		m_ip_folder = config.ip_config.location;
-		m_xci_folder = m_ip_folder / config.ip_config.xci_subdir;
+		m_ip_output_folder = m_ip_folder / config.ip_config.output_subdir;
 
 		m_bd_folder = config.bd_config.location;
-		m_bd_output_folder = m_bd_folder / config.bd_config.bd_subdir;
+		m_bd_output_folder = m_bd_folder / config.bd_config.output_subdir;
 
 		m_msg_config = config.messages_config;
 		m_msg_config.project_path = m_location;
@@ -148,7 +148,7 @@ namespace vvn
 				IpInstance inst {};
 				inst.tcl = tcl;
 				inst.name = tcl.stem().string();
-				inst.xci = m_xci_folder
+				inst.xci = m_ip_output_folder
 					/ inst.name
 					/ stdfs::path(inst.name).replace_extension(".xci");
 

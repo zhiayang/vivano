@@ -65,7 +65,7 @@ namespace vvn
 
 		struct {
 			stdfs::path location;
-			std::string xci_subdir;
+			std::string output_subdir;
 
 			bool auto_find_sources;
 
@@ -75,7 +75,7 @@ namespace vvn
 
 		struct {
 			stdfs::path location;
-			std::string bd_subdir;
+			std::string output_subdir;
 			bool auto_find_sources;
 
 		} bd_config;
@@ -145,7 +145,7 @@ namespace vvn
 		stdfs::path getProjectLocation() const { return m_location; }
 
 		stdfs::path getIpLocation() const { return m_ip_folder; }
-		stdfs::path getIpOutputsLocation() const { return m_xci_folder; }
+		stdfs::path getIpOutputsLocation() const { return m_ip_output_folder; }
 
 		stdfs::path getBdLocation() const { return m_bd_folder; }
 		stdfs::path getBdOutputsLocation() const { return m_bd_output_folder; }
@@ -179,7 +179,7 @@ namespace vvn
 		stdfs::path m_vivado_dir;
 
 		stdfs::path m_ip_folder;
-		stdfs::path m_xci_folder;
+		stdfs::path m_ip_output_folder;
 
 		stdfs::path m_bd_folder;
 		stdfs::path m_bd_output_folder;

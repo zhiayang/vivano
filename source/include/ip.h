@@ -35,12 +35,6 @@ namespace vvn::ip
 
 	zst::Failable<std::string> runIpCommand(const Project& proj, std::span<std::string_view> args);
 
-
-	zst::Failable<std::string> run_gui_and_wait_for_journal(const Project& proj, bool ip_project,
-		std::function<zst::Failable<std::string> (Vivado&)> run_setup,
-		std::function<bool (std::span<std::string_view>)> callback);
-
-
 	static constexpr const char* CREATE_IP_CMD_START_MARKER         = "# CREATE_IP_CMD_START";
 	static constexpr const char* CREATE_IP_CMD_END_MARKER           = "# CREATE_IP_CMD_END";
 	static constexpr const char* SET_IP_PROPERTIES_CMD_START_MARKER = "# SET_IP_PROPERTIES_CMD_START";

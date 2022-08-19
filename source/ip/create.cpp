@@ -47,7 +47,7 @@ namespace vvn::ip
 		std::string create_xci_cmd;
 		std::string customise_ip_cmd;
 
-		auto e = run_gui_and_wait_for_journal(proj, /* ip_project: */ true, [](auto&) {
+		auto e = runGuiAndWaitForJournal(proj, /* ip_project: */ true, [](auto&) {
 			return Ok();
 		}, [&](const auto& lines) -> bool {
 				int state = 0;
