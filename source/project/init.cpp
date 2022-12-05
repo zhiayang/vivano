@@ -43,10 +43,10 @@ namespace vvn
 			return;
 		}
 
-		auto part_name = std::string(args[1]);
+		auto part_name = std::string(args[0]);
 		std::optional<std::string> proj_name_opt {};
 		if(args.size() > 1)
-			proj_name_opt = std::string(args[2]);
+			proj_name_opt = std::string(args[1]);
 
 		create_project(std::move(part_name), std::move(proj_name_opt));
 	}
